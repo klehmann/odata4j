@@ -171,7 +171,7 @@ public class ODataCxfClient extends AbstractODataClient {
           : fw.getContentType();
 
       try {
-        StringEntity entity = new StringEntity(entityString);
+        StringEntity entity = new StringEntity(entityString, "UTF-8");
 
         entity.setContentType(contentType);
 
