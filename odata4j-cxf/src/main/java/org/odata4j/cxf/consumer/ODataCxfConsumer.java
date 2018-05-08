@@ -2,6 +2,7 @@ package org.odata4j.cxf.consumer;
 
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.apache.http.client.HttpClient;
 import org.odata4j.consumer.AbstractODataConsumer;
 import org.odata4j.consumer.ODataClient;
 import org.odata4j.consumer.ODataConsumer;
@@ -17,14 +18,14 @@ public class ODataCxfConsumer extends AbstractODataConsumer {
 
   private ODataCxfClient client;
 
-  private ODataCxfConsumer(FormatType type, String serviceRootUri, OClientBehavior... behaviors) {
+  private ODataCxfConsumer(HttpClient httpClient, FormatType type, String serviceRootUri, OClientBehavior... behaviors) {
     super(serviceRootUri);
 
     // ensure that the correct JAX-RS implementation (CXF) is loaded
     if (!(RuntimeDelegate.getInstance() instanceof org.apache.cxf.jaxrs.impl.RuntimeDelegateImpl))
       RuntimeDelegate.setInstance(new org.apache.cxf.jaxrs.impl.RuntimeDelegateImpl());
 
-    this.client = new ODataCxfClient(type, behaviors);
+    this.client = new ODataCxfClient(httpClient, type, behaviors);
   }
 
   @Override
@@ -37,7 +38,8 @@ public class ODataCxfConsumer extends AbstractODataConsumer {
     private FormatType formatType;
     private String serviceRootUri;
     private OClientBehavior[] clientBehaviors;
-
+    private HttpClient httpClient;
+    
     private Builder(String serviceRootUri) {
       this.serviceRootUri = serviceRootUri;
       this.formatType = FormatType.ATOM;
@@ -68,15 +70,26 @@ public class ODataCxfConsumer extends AbstractODataConsumer {
     }
 
     /**
+     * Sets the {@link HttpClient} used to read OData content
+     * 
+     * @param httpClient http client
+     * @return this builder
+     */
+    public Builder setHttpClient(HttpClient httpClient) {
+    	this.httpClient = httpClient;
+    	return this;
+    }
+    
+    /**
      * Builds the {@link ODataCxfConsumer} object.
      *
      * @return a new OData consumer
      */
     public ODataCxfConsumer build() {
       if (this.clientBehaviors != null) {
-        return new ODataCxfConsumer(this.formatType, this.serviceRootUri, this.clientBehaviors);
+	        return new ODataCxfConsumer(this.httpClient, this.formatType, this.serviceRootUri, this.clientBehaviors);
       } else {
-        return new ODataCxfConsumer(this.formatType, this.serviceRootUri);
+        return new ODataCxfConsumer(this.httpClient, this.formatType, this.serviceRootUri);
       }
     }
   }
